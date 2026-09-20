@@ -4,10 +4,10 @@
     <organization>com.w27wav</organization>
 
     <!-- Both the VST3 plugin AND the bundled sample banks install
-         system-wide (all users on this Mac), on the boot volume --
+         system-wide (all users on this Mac), on the boot volume:
          enable_localSystem. The sample banks go to a fixed, machine-wide
          location (/Library/Application Support/27wav/Sample Banks) rather
-         than any specific user's ~/Music -- SampleLibraryManager checks
+         than any specific user's ~/Music; SampleLibraryManager checks
          that location too (see its getBundledLibraryRoot()), alongside
          each user's own ~/Music/27wav rioleyva & noahmejia banks/. A
          machine-wide path was chosen specifically because it needs no
@@ -15,7 +15,7 @@
          account runs this installer. -->
     <domains enable_localSystem="true" enable_currentUserHome="false" enable_anywhere="false"/>
     <!-- customize="allow": the VST3 itself stays mandatory (its own
-         choice is hidden), but the sample banks are large -- anyone who
+         choice is hidden), but the sample banks are large, so anyone who
          doesn't want that much disk used can uncheck them on the second
          screen instead of being forced to install every pack. -->
     <options customize="allow" require-scripts="false" rootVolumeOnly="true"/>
