@@ -1,0 +1,357 @@
+<title>Установка 27wav rioleyva VST</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0d10;
+    --surface: #16171c;
+    --surface-2: #1c1e25;
+    --border: #2a2c33;
+    --text: #eceeef;
+    --text-dim: #9497a2;
+    --accent: #5ad1a8;
+    --accent-dim: #3a8f70;
+    --warn: #e8b34d;
+    --warn-dim: #8a6423;
+    --shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 12px 30px -18px rgba(0,0,0,0.6);
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="light"]) {
+      --bg: #f2f6f5;
+      --surface: #ffffff;
+      --surface-2: #eaf1ef;
+      --border: #d8e1de;
+      --text: #14171a;
+      --text-dim: #565c60;
+      --accent: #1f9a74;
+      --accent-dim: #bfe9da;
+      --warn: #a5700b;
+      --warn-dim: #f3e0bb;
+      --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 30px -20px rgba(20,30,28,0.18);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f6f5;
+    --surface: #ffffff;
+    --surface-2: #eaf1ef;
+    --border: #d8e1de;
+    --text: #14171a;
+    --text-dim: #565c60;
+    --accent: #1f9a74;
+    --accent-dim: #bfe9da;
+    --warn: #a5700b;
+    --warn-dim: #f3e0bb;
+    --shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 12px 30px -20px rgba(20,30,28,0.18);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    padding: 40px 16px 64px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  /* ---------- header ---------- */
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .mark {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Unbounded", sans-serif;
+    font-weight: 800;
+    font-size: 13px;
+    color: var(--bg);
+    flex: none;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  h1 {
+    font-family: "Unbounded", sans-serif;
+    font-weight: 700;
+    font-size: clamp(28px, 6vw, 38px);
+    line-height: 1.12;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    max-width: 54ch;
+    margin: 0;
+  }
+
+  /* mini piano-roll motif, echoing the plugin's own UI */
+  .roll {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 22px;
+  }
+  .roll span {
+    display: block;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--accent);
+    opacity: 0.85;
+  }
+
+  .platform-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .chip.ok { color: var(--accent); border-color: var(--accent-dim); }
+  .chip.no { color: var(--warn); border-color: var(--warn-dim); }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: flex-start;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+    font-size: 15px;
+    padding: 13px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    box-shadow: var(--shadow);
+  }
+  .cta svg { flex: none; }
+  .cta-note {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin: -6px 0 0;
+  }
+
+  /* ---------- steps ---------- */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .section-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 16px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+  }
+  .step-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent);
+  }
+  .step-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .step-num {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .step-title {
+    font-family: "Unbounded", sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+  }
+  .step-text {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-dim);
+  }
+  .step-text code, .step-text kbd {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 1px 6px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .step.warn { border-color: var(--warn-dim); }
+  .step.warn .step-icon { color: var(--warn); }
+  .callout {
+    margin-top: 4px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-left: 3px solid var(--warn);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  /* ---------- footer ---------- */
+  .foot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .foot a { color: var(--accent); text-decoration: none; }
+  .foot a:hover { text-decoration: underline; }
+
+  @media (max-width: 420px) {
+    .step { grid-template-columns: 36px 1fr; gap: 12px; padding: 14px; }
+    .step-icon { width: 36px; height: 36px; }
+  }
+</style>
+
+<div class="page">
+
+  <div class="brand-row">
+    <div class="mark">27</div>
+    <div class="eyebrow">27wav · MIDI Visualizer</div>
+  </div>
+
+  <div class="hero">
+    <div class="roll" aria-hidden="true">
+      <span style="width:26px"></span>
+      <span style="width:14px"></span>
+      <span style="width:38px"></span>
+      <span style="width:10px"></span>
+      <span style="width:20px"></span>
+      <span style="width:30px"></span>
+    </div>
+    <h1>Установи 27wav&nbsp;VST</h1>
+    <p class="lede">Плагин для FL Studio, который показывает твой MIDI в реальном времени —
+      прямо как настоящий Piano Roll, поверх любого своего фона. Пять шагов — и он в твоей DAW.</p>
+
+    <div class="platform-row">
+      <span class="chip ok">✓ macOS · Intel и Apple Silicon</span>
+      <span class="chip no">✕ Windows — пока нет</span>
+    </div>
+
+    <a class="cta" href="#" target="_blank" rel="noopener">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 19h14"/></svg>
+      Скачать 27wav rioleyva VST Installer.pkg
+    </a>
+    <p class="cta-note">← ссылку на скачивание вставь сюда сам, когда зальёшь .pkg в облако</p>
+  </div>
+
+  <div class="steps">
+    <div class="section-label">Установка — 5 шагов</div>
+
+    <div class="step">
+      <div class="step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-num">Шаг 1</div>
+        <div class="step-title">Скачай файл</div>
+        <div class="step-text">Перейди по ссылке выше и сохрани <code>27wav rioleyva VST Installer.pkg</code> — он появится в папке «Загрузки».</div>
+      </div>
+    </div>
+
+    <div class="step warn">
+      <div class="step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/><path d="M12 8v5"/><circle cx="12" cy="16" r="0.6" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-num">Шаг 2</div>
+        <div class="step-title">Открой файл — Mac предупредит, это нормально</div>
+        <div class="step-text">Дважды кликни по установщику. macOS покажет: «нельзя открыть — от неизвестного разработчика». Это стандартная защита, у плагина просто нет платной подписи Apple.</div>
+        <div class="callout">Нажми «Готово» / закрой окно — не нажимай «В корзину». Переходи к шагу 3.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8.96 19.3a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 8.96a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9.04 4.6a1.7 1.7 0 0 0 1.04-1.56V3a2 2 0 1 1 4 0v.09c0 .68.4 1.29 1.04 1.56.65.27 1.4.13 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87c.27.64.88 1.04 1.56 1.04H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1.04z"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-num">Шаг 3</div>
+        <div class="step-title">Разреши установку в настройках</div>
+        <div class="step-text">Открой <code>Системные настройки → Конфиденциальность и безопасность</code>, прокрути вниз до раздела «Безопасность». Там будет строка про заблокированный установщик и кнопка <code>Открыть все равно</code> — нажми её и подтверди паролем или Touch ID.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 8l2.5-5h13L21 8"/><path d="M9 12h6"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-num">Шаг 4</div>
+        <div class="step-title">Пройди установку</div>
+        <div class="step-text">Снова открой <code>27wav rioleyva VST Installer.pkg</code> — теперь появится обычное окно установщика. Жми <code>Продолжить</code> → <code>Установить</code>, введи пароль от Mac. Плагин ляжет в системную папку плагинов — сразу для всех, кто пользуется этим Mac.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 15h2"/><path d="M13 15h3"/></svg>
+      </div>
+      <div class="step-body">
+        <div class="step-num">Шаг 5</div>
+        <div class="step-title">Найди плагин в FL Studio</div>
+        <div class="step-text">Открой (или перезапусти) FL Studio → <code>Options → Manage Plugins → Find plugins</code>. Затем в <code>Channel Rack → + → Select generator plugin</code> найди по имени «27wav» и добавь — плагин появится как обычный инструмент.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Плагин только показывает MIDI — звук через него не проходит, добавляй его рядом с обычным инструментом на канале.</div>
+    <div>Вопросы или что-то не открылось — пиши: <a href="https://www.instagram.com/27wav/" target="_blank" rel="noopener">instagram.com/27wav</a></div>
+  </div>
+
+</div>

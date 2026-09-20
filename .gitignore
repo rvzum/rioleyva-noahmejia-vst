@@ -1,0 +1,15 @@
+build/
+build-*/
+.vs/
+.vscode/
+*.xcodeproj/
+DerivedData/
+xcuserdata/
+.DS_Store
+*.o
+*.obj
+CMakeCache.txt
+CMakeFiles/
+ThirdParty/JUCE
+build-release/
+Packaging/build/

@@ -1,0 +1,125 @@
+# Builds the Windows and macOS installers for RIO LEYVA x NOAH MEJIA VST and
+# publishes both as a GitHub Release, so anyone with the link (or the file
+# itself, once downloaded and forwarded) can install the plugin without
+# needing to build it themselves.
+#
+# There is no Windows machine in this project's normal dev environment (only
+# a Mac), so the Windows build/installer only ever happens here, on
+# GitHub's windows-latest runner. The macOS build mirrors what
+# Scripts/build_installer.sh already does locally -- see
+# Packaging/README.md for the full story on both installers being
+# UNSIGNED (no Apple Developer ID / no Windows code-signing certificate
+# yet), which is why first launch shows a one-time Gatekeeper /
+# SmartScreen warning on the receiving machine.
+name: Build installers
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg (background video -> frame extraction, used by CMakeLists.txt)
+        run: choco install ffmpeg -y
+
+      - name: Read project version from CMakeLists.txt
+        id: version
+        shell: pwsh
+        run: |
+          $m = Select-String -Path CMakeLists.txt -Pattern 'project\(27wavVST VERSION ([0-9.]+)' | Select-Object -First 1
+          $ver = $m.Matches[0].Groups[1].Value
+          if (-not $ver) { throw "Could not read project version from CMakeLists.txt" }
+          echo "version=$ver" >> $env:GITHUB_OUTPUT
+
+      - name: Configure (Release, x64)
+        run: cmake -B build -A x64
+
+      - name: Build VST3
+        run: cmake --build build --config Release --target 27wavVST_VST3 --parallel
+
+      - name: Locate built .vst3 bundle
+        id: locate
+        shell: pwsh
+        run: |
+          $dir = Get-ChildItem -Path "build\27wavVST_artefacts" -Recurse -Directory -Filter "*.vst3" |
+                 Select-Object -First 1 -ExpandProperty FullName
+          if (-not $dir) { throw "Could not find a built .vst3 bundle under build\27wavVST_artefacts" }
+          echo "vst3dir=$dir" >> $env:GITHUB_OUTPUT
+
+      - name: Locate Inno Setup (install if missing)
+        id: inno
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y
+          }
+          if (-not (Test-Path $iscc)) { throw "ISCC.exe still not found after install" }
+          echo "iscc=$iscc" >> $env:GITHUB_OUTPUT
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "Packaging\build" | Out-Null
+          & "${{ steps.inno.outputs.iscc }}" "Packaging\windows\installer.iss" `
+              "/DAppVersion=${{ steps.version.outputs.version }}" `
+              "/DSourceVst3Dir=${{ steps.locate.outputs.vst3dir }}" `
+              "/O`"Packaging\build`"" `
+              "/F`"RIO LEYVA x NOAH MEJIA VST Installer`""
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: Packaging/build/*.exe
+
+  macos-installer:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg (background video -> frame extraction, used by CMakeLists.txt)
+        run: brew install ffmpeg
+
+      - name: Build + package .pkg (Scripts/build_installer.sh)
+        run: |
+          chmod +x Scripts/build_installer.sh
+          ./Scripts/build_installer.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-installer
+          path: Packaging/build/*.pkg
+
+  publish-release:
+    needs: [windows-installer, macos-installer]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish a rolling "latest" release with both installers attached
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          make_latest: "true"
+          body: |
+            Automatically built by GitHub Actions from the latest push to main.
+
+            Both installers are UNSIGNED (no Apple Developer ID / Windows
+            code-signing certificate) -- the first launch on the receiving
+            machine shows a one-time Gatekeeper (macOS) or SmartScreen
+            (Windows) warning. See Packaging/README.md in the repo for
+            exactly what to tell whoever you send this to.
+          files: |
+            dist/windows-installer/*.exe
+            dist/macos-installer/*.pkg

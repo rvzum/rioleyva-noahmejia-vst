@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>RIO LEYVA x NOAH MEJIA VST</title>
+    <organization>com.w27wav</organization>
+
+    <!-- System-wide install only (all users on this Mac), on the boot
+         volume; matches /Library/Audio/Plug-Ins/VST3/ in the component
+         package below. This is why Installer.app asks for an admin
+         password. -->
+    <domains enable_localSystem="true" enable_currentUserHome="false" enable_anywhere="false"/>
+    <options customize="never" require-scripts="false" rootVolumeOnly="true"/>
+
+    <welcome file="Welcome.html" mime-type="text/html"/>
+    <conclusion file="Conclusion.html" mime-type="text/html"/>
+
+    <pkg-ref id="__COMPONENT_PKG_ID__"/>
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="choice_vst3"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="choice_vst3" visible="false">
+        <pkg-ref id="__COMPONENT_PKG_ID__"/>
+    </choice>
+
+    <!-- Filename must match COMPONENT_PKG_NAME in Scripts/build_installer.sh;
+         the script substitutes both placeholders at build time and passes
+         the productbuild package path option pointing at the directory
+         containing it. -->
+    <pkg-ref id="__COMPONENT_PKG_ID__" version="__VERSION__" onConclusion="none">__COMPONENT_PKG_NAME__</pkg-ref>
+</installer-gui-script>
