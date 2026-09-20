@@ -90,11 +90,21 @@ juce::File SampleLibraryManager::getRuntimeLibraryRoot()
              .getChildFile ("27wav rioleyva & noahmejia banks");
 }
 
+juce::File SampleLibraryManager::getBundledLibraryRoot()
+{
+    return juce::File::getSpecialLocation (juce::File::commonApplicationDataDirectory)
+             .getChildFile ("27wav")
+             .getChildFile ("Sample Banks");
+}
+
 SampleLibraryManager::SampleLibraryManager()
 {
     auto rootDir = getRuntimeLibraryRoot();
     if (! rootDir.exists())
         rootDir.createDirectory(); // best-effort -- gives the user an obvious place to drop files
+
+    // getBundledLibraryRoot() is deliberately NEVER auto-created here --
+    // only an installer should populate it (see the class doc comment).
 
     rescan();
 }
@@ -104,11 +114,22 @@ void SampleLibraryManager::rescan()
     root = Node{};
     flatSamples.clear();
 
-    auto rootDir = getRuntimeLibraryRoot();
-    if (! rootDir.isDirectory())
-        return;
+    // Both roots merge into one flat tree/list, in order: the user's own
+    // manually-added libraries first, then any machine-wide "factory"
+    // content an installer bundled -- see the class doc comment.
+    // flatSamples is passed by reference into both buildFolderNode()
+    // calls, so its indices stay one contiguous, depth-first sequence
+    // spanning both roots; callers (prev/next toolbar arrows, save/
+    // restore) have no idea there are two roots at all.
+    for (auto rootDir : { getRuntimeLibraryRoot(), getBundledLibraryRoot() })
+    {
+        if (! rootDir.isDirectory())
+            continue;
 
-    root = buildFolderNode (rootDir, {}, flatSamples);
+        auto node = buildFolderNode (rootDir, {}, flatSamples);
+        for (auto& child : node.children)
+            root.children.push_back (std::move (child));
+    }
 }
 
 const SampleLibraryManager::Sample* SampleLibraryManager::getSampleAt (int flatIndex) const

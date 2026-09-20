@@ -11,6 +11,14 @@
 # UNSIGNED (no Apple Developer ID / no Windows code-signing certificate
 # yet), which is why first launch shows a one-time Gatekeeper /
 # SmartScreen warning on the receiving machine.
+#
+# SAMPLE BANKS: both installers try to bundle the ~2GB sample library too
+# (see Scripts/upload_samples.sh / Packaging/README.md for the one-time
+# manual step of uploading them as assets on a "samples" GitHub Release).
+# If that "samples" release doesn't exist yet (or has no assets), both
+# jobs fall back to building a plugin-only installer instead of failing --
+# so this workflow works from the very first push, before samples have
+# ever been uploaded.
 name: Build installers
 
 on:
@@ -54,6 +62,32 @@ jobs:
           if (-not $dir) { throw "Could not find a built .vst3 bundle under build\27wavVST_artefacts" }
           echo "vst3dir=$dir" >> $env:GITHUB_OUTPUT
 
+      - name: Download sample banks (optional -- only if uploaded to the "samples" release)
+        id: samples
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force -Path "samples-src" | Out-Null
+          $downloaded = $false
+          try {
+            gh release download samples --repo "${{ github.repository }}" --dir samples-src --pattern "*.zip" --clobber
+            if ($LASTEXITCODE -eq 0 -and (Get-ChildItem samples-src -Filter *.zip -ErrorAction SilentlyContinue).Count -gt 0) {
+              $downloaded = $true
+            }
+          } catch {
+            Write-Host "No 'samples' release found (or no assets) -- building plugin-only installer."
+          }
+          if ($downloaded) {
+            Get-ChildItem samples-src -Filter *.zip | ForEach-Object {
+              Expand-Archive -Path $_.FullName -DestinationPath "samples-src" -Force
+              Remove-Item $_.FullName
+            }
+            echo "dir=$((Resolve-Path 'samples-src').Path)" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "dir=" >> $env:GITHUB_OUTPUT
+          }
+
       - name: Locate Inno Setup (install if missing)
         id: inno
         shell: pwsh
@@ -69,11 +103,17 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "Packaging\build" | Out-Null
-          & "${{ steps.inno.outputs.iscc }}" "Packaging\windows\installer.iss" `
-              "/DAppVersion=${{ steps.version.outputs.version }}" `
-              "/DSourceVst3Dir=${{ steps.locate.outputs.vst3dir }}" `
-              "/O`"Packaging\build`"" `
-              "/F`"RIO LEYVA x NOAH MEJIA VST Installer`""
+          $isccArgs = @(
+            "Packaging\windows\installer.iss",
+            "/DAppVersion=${{ steps.version.outputs.version }}",
+            "/DSourceVst3Dir=${{ steps.locate.outputs.vst3dir }}",
+            "/O`"Packaging\build`"",
+            "/F`"RIO LEYVA x NOAH MEJIA VST Installer`""
+          )
+          if ("${{ steps.samples.outputs.dir }}" -ne "") {
+            $isccArgs += "/DSourceSamplesDir=${{ steps.samples.outputs.dir }}"
+          }
+          & "${{ steps.inno.outputs.iscc }}" @isccArgs
 
       - uses: actions/upload-artifact@v4
         with:
@@ -88,7 +128,30 @@ jobs:
       - name: Install ffmpeg (background video -> frame extraction, used by CMakeLists.txt)
         run: brew install ffmpeg
 
+      - name: Download sample banks (optional -- only if uploaded to the "samples" release)
+        id: samples
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p samples-src
+          if gh release download samples --repo "${{ github.repository }}" --dir samples-src --pattern "*.zip" --clobber; then
+            if ls samples-src/*.zip >/dev/null 2>&1; then
+              for z in samples-src/*.zip; do
+                unzip -q -o "$z" -d samples-src
+                rm -f "$z"
+              done
+              echo "dir=$(pwd)/samples-src" >> "$GITHUB_OUTPUT"
+            else
+              echo "dir=" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "No 'samples' release found -- building plugin-only installer."
+            echo "dir=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build + package .pkg (Scripts/build_installer.sh)
+        env:
+          W27_SAMPLES_DIR: ${{ steps.samples.outputs.dir }}
         run: |
           chmod +x Scripts/build_installer.sh
           ./Scripts/build_installer.sh
@@ -115,11 +178,16 @@ jobs:
           body: |
             Automatically built by GitHub Actions from the latest push to main.
 
-            Both installers are UNSIGNED (no Apple Developer ID / Windows
-            code-signing certificate) -- the first launch on the receiving
-            machine shows a one-time Gatekeeper (macOS) or SmartScreen
-            (Windows) warning. See Packaging/README.md in the repo for
-            exactly what to tell whoever you send this to.
+            When a "samples" release with the uploaded sample-bank zips
+            exists in this repo, both installers below bundle the sample
+            banks too (installed machine-wide, shared by every DAW/user on
+            the receiving computer); otherwise they install the plugin
+            only. Either way, both installers are UNSIGNED (no Apple
+            Developer ID / Windows code-signing certificate) -- the first
+            launch on the receiving machine shows a one-time Gatekeeper
+            (macOS) or SmartScreen (Windows) warning. See
+            Packaging/README.md in the repo for exactly what to tell
+            whoever you send this to.
           files: |
             dist/windows-installer/*.exe
             dist/macos-installer/*.pkg

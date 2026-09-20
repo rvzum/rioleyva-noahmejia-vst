@@ -8,14 +8,28 @@ namespace w27
 
 /**
     Enumerates the oneshot sample libraries the plugin can play, read live
-    from a fixed folder on disk -- ~/Music/27wav rioleyva & noahmejia banks/ (see
-    getRuntimeLibraryRoot()) -- rather than embedded into the plugin binary
-    at build time. Real Rio Leyva packs run into the gigabytes, and
+    from TWO fixed folders on disk -- rather than embedded into the plugin
+    binary at build time. Real Rio Leyva packs run into the gigabytes, and
     compiling that much data into the binary (the approach
     Effects/BackgroundManager still uses for its much smaller GIFs/frames)
     made builds impractically slow and would have produced a
     multi-gigabyte plugin bundle, so samples are the one asset type that
     stays on disk and gets read at runtime instead.
+
+    The two folders are merged into one flat tree/list (see rescan()):
+    - getRuntimeLibraryRoot() (~/Music/27wav rioleyva & noahmejia banks/)
+      -- per-user, for libraries YOU drop in by hand. Created automatically
+      if missing so there's always somewhere obvious to put files.
+    - getBundledLibraryRoot() (/Library/Application Support/27wav/Sample
+      Banks on macOS, C:\ProgramData\27wav\Sample Banks on Windows) --
+      machine-wide "factory" content an installer places there (see
+      Scripts/build_installer.sh / Packaging/windows/installer.iss), so a
+      fresh install on someone else's machine has sounds to play
+      immediately without any separate file transfer. A machine-wide
+      location was chosen specifically because it needs no per-user
+      elevation trickery from either installer -- see Packaging/README.md.
+      Never auto-created by the app itself (only an installer should
+      populate it).
 
     Per explicit user request, the on-disk folder tree is mirrored EXACTLY
     in the plugin's library menu, at whatever nesting depth it actually
@@ -80,9 +94,15 @@ public:
     // ~/Music/27wav rioleyva & noahmejia banks -- fixed, not user-configurable (yet).
     static juce::File getRuntimeLibraryRoot();
 
-    // Re-walks getRuntimeLibraryRoot() from scratch. Safe to call anytime
-    // from the message thread; not real-time safe (does file I/O), so
-    // never call this from the audio thread.
+    // /Library/Application Support/27wav/Sample Banks (macOS) or
+    // C:\ProgramData\27wav\Sample Banks (Windows) -- see the class doc
+    // comment above.
+    static juce::File getBundledLibraryRoot();
+
+    // Re-walks both getRuntimeLibraryRoot() and getBundledLibraryRoot()
+    // from scratch and merges them into one tree/list. Safe to call
+    // anytime from the message thread; not real-time safe (does file
+    // I/O), so never call this from the audio thread.
     void rescan();
 
     // Root of the on-disk folder tree; its own name/relativePath/filePath
