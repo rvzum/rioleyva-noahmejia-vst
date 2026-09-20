@@ -102,13 +102,20 @@ jobs:
       - name: Build installer (Inno Setup)
         shell: pwsh
         run: |
+          # NOTE: /O and /F values must NOT be manually wrapped in backtick-escaped
+          # quotes (`"..."`) here -- PowerShell's own native-argument quoting
+          # (used because "RIO LEYVA x NOAH MEJIA VST Installer" contains spaces)
+          # conflicts with manually-embedded quote characters and corrupts the
+          # argv ISCC.exe receives, producing "You may not specify more than one
+          # script filename." Let PowerShell auto-quote the whole array element
+          # instead -- it does this correctly for any element containing spaces.
           New-Item -ItemType Directory -Force -Path "Packaging\build" | Out-Null
           $isccArgs = @(
             "Packaging\windows\installer.iss",
             "/DAppVersion=${{ steps.version.outputs.version }}",
             "/DSourceVst3Dir=${{ steps.locate.outputs.vst3dir }}",
-            "/O`"Packaging\build`"",
-            "/F`"RIO LEYVA x NOAH MEJIA VST Installer`""
+            "/OPackaging\build",
+            "/FRIO LEYVA x NOAH MEJIA VST Installer"
           )
           if ("${{ steps.samples.outputs.dir }}" -ne "") {
             $isccArgs += "/DSourceSamplesDir=${{ steps.samples.outputs.dir }}"
@@ -121,7 +128,15 @@ jobs:
           path: Packaging/build/*.exe
 
   macos-installer:
-    runs-on: macos-latest
+    # Pinned (not macos-latest): as of mid-2026 macos-latest resolves to the
+    # macos-26 image (Xcode 26.x / macOS 26 SDK), whose SDK fully removes
+    # CGWindowListCreateImage -- juceaide (JUCE 7.0.12's internal build tool)
+    # still calls it and fails to compile there ("obsoleted in macOS 15.0 -
+    # Please use ScreenCaptureKit instead"), unrelated to anything in this
+    # repo. macos-14 defaults to Xcode 15.4, which still has it. See
+    # https://github.com/juce-framework/JUCE/issues/1427 -- revisit if/when
+    # JUCE is upgraded past 7.0.12 to a version that fixes this upstream.
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
